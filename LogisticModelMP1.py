@@ -11,7 +11,7 @@ from dlc_bci import load
 STEP 1: LOADING DATASET
 '''
 
-inputs, labels = load('~ Documents/Studies/EPFL/Semester2/DeepLearning/MiniProject1/data_bci/',train = True, download = False, one_khz = False)
+inputs, labels = load('./data_bci/',train = True, download = False, one_khz = False)
 inputs = Variable(inputs.view(-1, 28*50))
 labels = Variable(labels)
 
