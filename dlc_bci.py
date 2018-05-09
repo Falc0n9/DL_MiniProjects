@@ -73,5 +73,3 @@ def load(root, train = True, download = True, one_khz = False):
         target = target.view(-1).long()
 
     return input, target
-
-
