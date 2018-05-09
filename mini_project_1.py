@@ -47,6 +47,7 @@ class Net(nn.Module):
         return x
 
 test_input_len = 56
+lambda_1 = 0.0001
 train_input, train_target = bci.load(root = './data_bci')
 test_input, test_target = bci.load(root = './data_bci', train = False)
 print(train_target.size())
@@ -89,14 +90,12 @@ for k in range(nb_epochs):
         model.zero_grad()
         loss.backward()
         optimizer.step()
+        for p in model.parameters():
+            p.data -= p.data.sign() * p.data.abs().clamp(max = lambda_1)
         sum_loss = sum_loss + loss.data[0]
 
     print(k,sum_loss)
     print(k," Train Accuracy:",100*(1-compute_nb_errors(model,train_input,train_target,4)/len(train_input)))
     print(k," Train_Test Accuracy:",100*(1-compute_nb_errors(model,train_test_input,train_test_target,4)/len(test_input)))
-    #print(k," Test Accuracy:",100*(1-compute_nb_errors(model,test_input,test_target,4)/len(test_input)))
-
-
-
-
+    print(k," Test Accuracy:",100*(1-compute_nb_errors(model,test_input,test_target,4)/len(test_input)))
 
