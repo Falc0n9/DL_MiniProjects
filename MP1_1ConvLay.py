@@ -20,34 +20,31 @@ class Net(nn.Module):
     def __init__(self):
         super(Net,self).__init__()
 
-        conv1_kernel_size = 2
-        conv2_kernel_size = 2
+        conv1_kernel_size = 5
+        conv2_kernel_size = 5
 
         self.pool1_kernel_size = 1
-        self.pool2_kernel_size = 1
 
         nb_measurements = 50
 
         conv1_nb_in_channels = 28
-        conv1_nb_out_channels = 10
-        conv2_nb_out_channels = 5
+        conv1_nb_out_channels = 20
 
-        self.linear1_in_size = conv2_nb_out_channels * floor((floor((nb_measurements-conv1_kernel_size+1)/self.pool1_kernel_size)-conv2_kernel_size+1)/self.pool2_kernel_size)
+        self.linear1_in_size = conv1_nb_out_channels * floor((nb_measurements-conv1_kernel_size+1)/self.pool1_kernel_size)
 
         self.conv1 = nn.Conv1d(conv1_nb_in_channels,conv1_nb_out_channels,kernel_size=conv1_kernel_size)
-        self.conv2 = nn.Conv1d(conv1_nb_out_channels,conv2_nb_out_channels,kernel_size=conv2_kernel_size)
         self.fc1 = nn.Linear(self.linear1_in_size,10)
-        self.fc2 = nn.Linear(10,2)
+
 
     def forward(self, x):
         x = F.tanh(F.max_pool1d(self.conv1(x), kernel_size = self.pool1_kernel_size))
-        x = F.tanh(F.max_pool1d(self.conv2(x), kernel_size = self.pool2_kernel_size))
+        #x = F.tanh(F.max_pool1d(self.conv2(x), kernel_size = self.pool2_kernel_size))
         x = F.tanh(self.fc1(x.view(-1,self.linear1_in_size)))
-        x = self.fc2(x)
+        #x = self.fc2(x)
         return x
 
 test_input_len = 56
-lambda_1 = 0.0001
+lambda_1 = 0.0000000
 train_input, train_target = bci.load(root = './data_bci')
 test_input, test_target = bci.load(root = './data_bci', train = False)
 print(train_target.size())
