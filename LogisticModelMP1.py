@@ -19,7 +19,10 @@ labels = Variable(labels)
 STEP 2:
 '''
 
-num_epochs = 10
+batch_size = 100
+n_iters = 3000
+num_epochs = n_iters / (len(inputs) / batch_size)
+num_epochs = int(num_epochs)
 
 '''
 STEP 3: CREATE MODEL CLASS
@@ -59,8 +62,6 @@ STEP 7: TRAIN THE MODEL
 '''
 
 for epoch in range(num_epochs):
-        epoch += 1
-        
         # Clear gradients w.r.t. parameters
         optimizer.zero_grad()
         
