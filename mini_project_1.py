@@ -20,8 +20,8 @@ class Net(nn.Module):
     def __init__(self):
         super(Net,self).__init__()
 
-        conv1_kernel_size = 5
-        conv2_kernel_size = 5
+        conv1_kernel_size = 2
+        conv2_kernel_size = 2
 
         self.pool1_kernel_size = 1
         self.pool2_kernel_size = 1
@@ -29,8 +29,8 @@ class Net(nn.Module):
         nb_measurements = 50
 
         conv1_nb_in_channels = 28
-        conv1_nb_out_channels = 3
-        conv2_nb_out_channels = 6
+        conv1_nb_out_channels = 10
+        conv2_nb_out_channels = 5
 
         self.linear1_in_size = conv2_nb_out_channels * floor((floor((nb_measurements-conv1_kernel_size+1)/self.pool1_kernel_size)-conv2_kernel_size+1)/self.pool2_kernel_size)
 
@@ -40,9 +40,9 @@ class Net(nn.Module):
         self.fc2 = nn.Linear(10,2)
 
     def forward(self, x):
-        x = F.relu(F.max_pool1d(self.conv1(x), kernel_size = self.pool1_kernel_size))
-        x = F.relu(F.max_pool1d(self.conv2(x), kernel_size = self.pool2_kernel_size))
-        x = F.relu(self.fc1(x.view(-1,self.linear1_in_size)))
+        x = F.tanh(F.max_pool1d(self.conv1(x), kernel_size = self.pool1_kernel_size))
+        x = F.tanh(F.max_pool1d(self.conv2(x), kernel_size = self.pool2_kernel_size))
+        x = F.tanh(self.fc1(x.view(-1,self.linear1_in_size)))
         x = self.fc2(x)
         return x
 
@@ -50,11 +50,14 @@ test_input_len = 56
 train_input, train_target = bci.load(root = './data_bci')
 test_input, test_target = bci.load(root = './data_bci', train = False)
 print(train_target.size())
-test_input = Variable(train_input[len(train_input)-test_input_len:len(train_input)].float())
-test_target = Variable(train_target[len(train_input)-test_input_len:len(train_input)])
+train_test_input = Variable(train_input[len(train_input)-test_input_len:len(train_input)].float())
+train_test_target = Variable(train_target[len(train_input)-test_input_len:len(train_input)])
 
 train_target = Variable(train_target[0:len(train_input)-test_input_len])
 train_input = Variable(train_input[0:len(train_input)-test_input_len].float())
+
+test_target = Variable(test_target)
+test_input = Variable(test_input.float())
 
 model, criterion = Net(), nn.CrossEntropyLoss()
 
@@ -90,8 +93,8 @@ for k in range(nb_epochs):
 
     print(k,sum_loss)
     print(k," Train Accuracy:",100*(1-compute_nb_errors(model,train_input,train_target,4)/len(train_input)))
-    print(k," Test Accuracy:",100*(1-compute_nb_errors(model,test_input,test_target,4)/len(test_input)))
-
+    print(k," Train_Test Accuracy:",100*(1-compute_nb_errors(model,train_test_input,train_test_target,4)/len(test_input)))
+    #print(k," Test Accuracy:",100*(1-compute_nb_errors(model,test_input,test_target,4)/len(test_input)))
 
 
 
