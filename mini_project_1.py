@@ -1,5 +1,5 @@
 import dlc_bci as bci
-from math import ceil
+from math import ceil, floor
 from torch import cuda, nn, optim
 from torch.nn import functional as F
 from torch.autograd import Variable
@@ -20,24 +20,24 @@ class Net(nn.Module):
     def __init__(self):
         super(Net,self).__init__()
 
-        conv1_kernel_size = 3
-        conv2_kernel_size = 3
+        conv1_kernel_size = 5
+        conv2_kernel_size = 5
 
-        self.pool1_kernel_size = 3
-        self.pool2_kernel_size = 2
+        self.pool1_kernel_size = 1
+        self.pool2_kernel_size = 1
 
         nb_measurements = 50
 
         conv1_nb_in_channels = 28
-        conv1_nb_out_channels = 32
-        conv2_nb_out_channels = 64
+        conv1_nb_out_channels = 3
+        conv2_nb_out_channels = 6
 
-        self.linear1_in_size = conv2_nb_out_channels * ceil((ceil((nb_measurements-conv1_kernel_size+1)/self.pool1_kernel_size)-conv2_kernel_size+1)/self.pool2_kernel_size)
+        self.linear1_in_size = conv2_nb_out_channels * floor((floor((nb_measurements-conv1_kernel_size+1)/self.pool1_kernel_size)-conv2_kernel_size+1)/self.pool2_kernel_size)
 
         self.conv1 = nn.Conv1d(conv1_nb_in_channels,conv1_nb_out_channels,kernel_size=conv1_kernel_size)
         self.conv2 = nn.Conv1d(conv1_nb_out_channels,conv2_nb_out_channels,kernel_size=conv2_kernel_size)
-        self.fc1 = nn.Linear(self.linear1_in_size,200)
-        self.fc2 = nn.Linear(200,2)
+        self.fc1 = nn.Linear(self.linear1_in_size,10)
+        self.fc2 = nn.Linear(10,2)
 
     def forward(self, x):
         x = F.relu(F.max_pool1d(self.conv1(x), kernel_size = self.pool1_kernel_size))
@@ -46,37 +46,24 @@ class Net(nn.Module):
         x = self.fc2(x)
         return x
 
-
+test_input_len = 56
 train_input, train_target = bci.load(root = './data_bci')
 test_input, test_target = bci.load(root = './data_bci', train = False)
-train_target = Variable(train_target)
-train_input = Variable(train_input.float())
-test_input = Variable(test_input.float())
-test_target = Variable(test_target)
+print(train_target.size())
+test_input = Variable(train_input[len(train_input)-test_input_len:len(train_input)].float())
+test_target = Variable(train_target[len(train_input)-test_input_len:len(train_input)])
 
+train_target = Variable(train_target[0:len(train_input)-test_input_len])
+train_input = Variable(train_input[0:len(train_input)-test_input_len].float())
 
 model, criterion = Net(), nn.CrossEntropyLoss()
 
 mu, std = train_input.data.mean(), train_input.data.std()
 train_input.data.sub_(mu).div_(std)
 
-lr, nb_epochs, batch_size = 1e-2, 100, 4
+lr, nb_epochs, batch_size = 1e-1, 100, 10
 
 optimizer = optim.SGD(model.parameters(), lr = lr)
-
-
-for k in range(nb_epochs):
-    sum_loss = 0
-    for b in range(0, train_input.size(0), batch_size):
-        output = model(train_input.narrow(0, b, batch_size))
-        loss = criterion(output, train_target.narrow(0,b,batch_size))
-        model.zero_grad()
-        loss.backward()
-        optimizer.step()
-        sum_loss = sum_loss + loss.data[0]
-
-    print(k,sum_loss)
-
 
 def compute_nb_errors(model, input, target, mini_batch_size):
 
@@ -91,7 +78,22 @@ def compute_nb_errors(model, input, target, mini_batch_size):
 
     return nb_errors
 
-print(test_input.size())
-print(compute_nb_errors(model,test_input,test_target,4))
+for k in range(nb_epochs):
+    sum_loss = 0
+    for b in range(0, train_input.size(0), batch_size):
+        output = model(train_input.narrow(0, b, batch_size))
+        loss = criterion(output, train_target.narrow(0,b,batch_size))
+        model.zero_grad()
+        loss.backward()
+        optimizer.step()
+        sum_loss = sum_loss + loss.data[0]
+
+    print(k,sum_loss)
+    print(k," Train Accuracy:",100*(1-compute_nb_errors(model,train_input,train_target,4)/len(train_input)))
+    print(k," Test Accuracy:",100*(1-compute_nb_errors(model,test_input,test_target,4)/len(test_input)))
+
+
+
+
 
 
