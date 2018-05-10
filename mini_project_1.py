@@ -36,7 +36,7 @@ class Net(nn.Module):
 
         self.conv1 = nn.Conv1d(conv1_nb_in_channels,conv1_nb_out_channels,kernel_size=conv1_kernel_size)
         self.conv2 = nn.Conv1d(conv1_nb_out_channels,conv2_nb_out_channels,kernel_size=conv2_kernel_size)
-        self.fc1 = nn.Linear(self.linear1_in_size,10)
+        self.fc1 = nn.Linear(self.linear1_in_size,10) #does the linear layer correctly handel batches?
         self.fc2 = nn.Linear(10,2)
 
     def forward(self, x):
