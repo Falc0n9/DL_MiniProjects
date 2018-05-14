@@ -42,7 +42,7 @@ test_input_len = 56
 lambda_1 = 0.0001
 train_input, train_target = bci.load(root = './data_bci')
 test_input, test_target = bci.load(root = './data_bci', train = False)
-print(train_target.size())
+
 train_test_input = Variable(train_input[len(train_input)-test_input_len:len(train_input)].float())
 train_test_target = Variable(train_target[len(train_input)-test_input_len:len(train_input)])
 
