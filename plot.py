@@ -26,7 +26,7 @@ def plot_data(train_data,train_target):
     circle = plt.Circle((0, 0), 1/sqrt(2*pi), color='r', fill=False)
     ax.add_artist(circle)
 
-    #plt.show()
+
 
 
     #Plotting Data

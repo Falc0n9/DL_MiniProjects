@@ -67,3 +67,4 @@ plot_data(train_data_for_plot,predicted_classes)
 
 #for param in seq.param():
 #    print(param.data)
+

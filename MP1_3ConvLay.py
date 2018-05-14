@@ -24,7 +24,7 @@ class Net(nn.Module):
         self.pool3_kernel_size = 1
 
         nb_measurements = 50
-
+        
         conv1_nb_in_channels = 28
         conv1_nb_out_channels = 5
         conv2_nb_out_channels = 5

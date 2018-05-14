@@ -8,14 +8,6 @@ from dlc_practical_prologue import convert_to_one_hot_labels
 from torch import LongTensor
 
 
-
-
-
-
-
-
-
-
 class Net(nn.Module):
     def __init__(self):
         super(Net,self).__init__()
