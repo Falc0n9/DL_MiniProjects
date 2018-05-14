@@ -2,7 +2,20 @@ from torch import LongTensor
 from torch import FloatTensor as Tensor
 import math
 
-#TODO: maybe add support for minibatches
+
+class Parameter(object):
+    """
+    A Parameter is a Tensor with an extra grad field.
+    """
+
+    def __init__(self, *args):
+        self.data = Tensor(*args)
+        self.grad = Tensor(*args)
+        self.zero_grad()
+
+    def zero_grad(self):
+        self.grad.zero_()
+
 
 class Module(object):
 
@@ -13,152 +26,109 @@ class Module(object):
         raise NotImplementedError
 
     def param(self):
-        raise NotImplementedError
-
-    def has_param(self):
-        return True
-
-class Function(Module): # a function is a module without params
-
-    @staticmethod
-    def forward(x):
-        r"""
-        This function is to be overridden by all subclasses.
-        """
-        raise NotImplementedError
-
-    @staticmethod
-    def backward(grad_output):
-        r"""fc
-        This function is to be overridden by all subclasses.
-        """
-        raise NotImplementedError
-
-    @staticmethod
-    def param():
         return []
 
-    @staticmethod
-    def has_param(self):
-        return False
-
-class Tanh(Function):
-
-    @staticmethod
-    def forward(x):
-        result = x.clone()
-        return result.tanh() #inplace or not?
-
-    @staticmethod
-    def backward(grad_output):
-        result = grad_output.clone()
-        return 1-result.tanh().pow(2) # klopt niet
-
-    #param(self) is implemented in Functional super class
+    def zero_grad(self):
+        for parameter in self.param():
+            parameter.zero_grad()
 
 
-class ReLU(Function):
+class Tanh(Module):
 
-    #ctx
+    def __init__(self):
+        self.y = None
 
-    @staticmethod
-    def forward(ctx, x):
-        ctx.x = x
-        result = x.clone()
-        return result.clamp(min=0)
+    def forward(self, x):
+        self.y = x.tanh()
+        return self.y
 
-    @staticmethod
-    def backward(ctx, grad_output):
-        result = grad_output.mul(ctx.x>0) #double check for x = 0
-        return result
+    def backward(self, grad_output):
+        return grad_output.mul(1 - self.y.pow(2))
+
+
+class ReLU(Module):
+
+    def __init__(self):
+        self.x = None
+
+    def forward(self, x):
+        self.x = x
+        return x.clamp(min=0)
+
+    def backward(self, grad_output):
+        return grad_output.mul((self.x > 0).float())
 
 
 class Linear(Module):
 
     def __init__(self, in_features, out_features, bias=True):
 
-        self.weight = Tensor(out_features,in_features)
-        self.weight_grad = Tensor(self.weight.size()).zero_()
-
+        self.weight = Parameter(out_features, in_features)
         if bias:
-            self.bias = Tensor(out_features)
-            self.bias_grad = Tensor(self.bias.size()).zero_()
+            self.bias = Parameter(out_features)
         else:
             self.bias = None
 
+        self.x = None
+
         self.init_parameters()
 
-    def init_parameters(self):
-        stdv = 1. / math.sqrt(self.weight.size(1))
-        self.weight.uniform_(-stdv, stdv)
+    def init_parameters(self):  # TODO: check
+        stdv = 1. / math.sqrt(self.weight.data.size(1))
+        self.weight.data.uniform_(-stdv, stdv)
         if self.bias is not None:
-            self.bias.uniform_(-stdv, stdv)
+            self.bias.data.uniform_(-stdv, stdv)
 
-    def zero_grad(self):
-        self.weight_grad.zero_()
-        self.bias_grad.zero_()
-
-    def forward(self, ctx, x):
-        ctx.x = x
-
+    def forward(self, x):
+        self.x = x
         if self.bias is not None:
-            return self.weight.mm(x) + self.bias
+            return x.mm(self.weight.data.t()) + self.bias.data
         else:
-            return self.weight.mm(x)
+            return x.mm(self.weight.data.t())
 
-    def backward(self, ctx, grad_output):
+    def backward(self, grad_output):
 
-        grad_input = grad_output.mm(self.weight)
-        grad_weight = grad_output.t().mm(ctx.x)
+        grad_input = grad_output.mm(self.weight.data)
+        grad_weight = grad_output.t().mm(self.x)
         grad_bias = grad_output.sum(0).squeeze(0)
 
-        self.weight_grad += grad_weight
-        self.bias_grad += grad_bias
+        self.weight.grad += grad_weight
+        self.bias.grad += grad_bias
 
         return grad_input
 
     def param(self):
-        return [(self.weight,self.weight_grad),(self.bias,self.bias_grad)]
+        return [self.weight, self.bias]
+
 
 class Sequential(Module):
-
 
     def __init__(self, *args):
         self.modules = args
 
     def forward(self, x):
-        result = x.copy()
-        for module in self.modules: # traverse in sequential direction
+        result = x
+        for module in self.modules:
             result = module.forward(result)
-
         return result
-
 
     def backward(self, grad_output):
-
-        grad_input = grad_output.copy()
-        for module in self.modules:
-            grad_input = module.backward(grad_input) #klopt misschien niet
-
+        grad_input = grad_output
+        for module in reversed(self.modules):
+            grad_input = module.backward(grad_input)
         return grad_input
 
-    def zero_grad(self):
-
-        for module in self.modules:
-            if module.has_param():
-                module.zero_grad()
-
     def param(self):
-
         result = []
-
         for module in self.modules:
-            if module.has_param():
-                result += module.param()
-
+            result += module.param()
         return result
 
 
+def loss_mse(x, y):
+    error = (x - y)
 
+    loss = error.pow(2).sum()
+    grad = 2 * error
 
-
+    return loss, grad
