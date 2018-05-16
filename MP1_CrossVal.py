@@ -8,7 +8,7 @@ from dlc_practical_prologue import convert_to_one_hot_labels
 from torch import LongTensor
 from cross_val import cross_val_datasets
 
-
+#Adapt Learning Rate Depending on Batch Size
 class Net(nn.Module):
     def __init__(self):
         super(Net,self).__init__()
