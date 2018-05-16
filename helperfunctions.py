@@ -1,11 +1,5 @@
-import dlc_bci as bci
-import numpy
-from dlc_practical_prologue import convert_to_one_hot_labels
-from math import ceil, floor, sqrt, pi
-from torch import cuda, nn, optim, split, Tensor, cat, LongTensor
-from torch.nn import functional as F
-from torch.autograd import Variable
-from torchvision import datasets
+from math import floor, sqrt, pi
+from torch import split, Tensor, cat, LongTensor
 import matplotlib.pyplot as plt
 
 
@@ -18,9 +12,9 @@ def compute_nb_errors(model, input, target, mini_batch_size):
 
     for b in range(0, input.size(0) - input.size(0)%mini_batch_size, mini_batch_size):
         output = model(input.narrow(0, b, mini_batch_size))
-        _, predicted_classes = output.data.max(1)
+        _, predicted_classes = output.max(1)
         for k in range(0, mini_batch_size):
-            if target.data[b + k] != predicted_classes[k]:
+            if target[b + k] != predicted_classes[k]:
                 nb_errors = nb_errors + 1
 
     return nb_errors
@@ -108,3 +102,7 @@ def cross_val_datasets(input, target, validate_size):
 
     return train_input, train_target, validate_input, validate_target
 
+def convert_to_one_hot_labels(input, target):
+    tmp = input.new(target.size(0), target.max() + 1).fill_(-1)
+    tmp.scatter_(1, target.view(-1, 1), 1.0)
+    return tmp
