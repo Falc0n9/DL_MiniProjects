@@ -10,7 +10,8 @@ from helperfunctions import compute_nb_errors, cross_val_datasets
 #Defining structure of neural network in class Net()
 class Net(nn.Module):
     def __init__(self):
-        super(Net,self).__init__()
+        
+        super().__init__()
 
         #Defining kernel_size for each convolutional layer
         conv1_kernel_size = 2
@@ -31,7 +32,7 @@ class Net(nn.Module):
         #Determining the input size of the first linear layer as a function of the previous operations
         self.linear1_in_size = conv2_nb_out_channels * floor((floor((nb_measurements-conv1_kernel_size+1)/self.pool1_kernel_size)-conv2_kernel_size+1)/self.pool2_kernel_size)
 
-        #Defening each convolutional and linear layer with its respective input and output sizes
+        #Defining each convolutional and linear layer with its respective input and output sizes
         self.conv1 = nn.Conv1d(conv1_nb_in_channels,conv1_nb_out_channels,kernel_size=conv1_kernel_size)
         self.conv2 = nn.Conv1d(conv1_nb_out_channels,conv2_nb_out_channels,kernel_size=conv2_kernel_size)
         self.fc1 = nn.Linear(self.linear1_in_size,10) #does the linear layer correctly handle batches?
