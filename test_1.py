@@ -59,9 +59,6 @@ test_target, test_input = Variable(test_target), Variable(test_input)
 lr, nb_epochs, batch_size = 0.1, 100, 10
 lambda_L1 = lambda_L2 = 0.0001
 
-
-
-
 conv_layer = [(2,10),(2,5)]
 linear_layer = [10,20]
 
@@ -76,5 +73,7 @@ for i in range(train_input.size(0)):
     print(i, " Train Accuracy:",
           100 * (1 - compute_nb_errors(model, train_input[i], train_target[i], batch_size) / len(train_input[i])))
     print(i, " Validate Accuracy:", 100 * (
+            1 - compute_nb_errors(model, validate_input[i], validate_target[i], batch_size) / len(validate_input[i])))
+    print(i, " Test Accuracy:", 100 * (
             1 - compute_nb_errors(model, validate_input[i], validate_target[i], batch_size) / len(validate_input[i])))
     print("-------------------------------------------------------------")
