@@ -31,10 +31,10 @@ class Net(nn.Module):
             modules_conv.append(act_func)
 
             if with_batchnorm_conv:
-                modules_conv.append(nn.BatchNorm1d()) #TODO
+                modules_conv.append(nn.BatchNorm1d(nb_out_channels))
 
             if with_dropout_conv:
-                modules_conv.append(nn.Dropout2d(p = 0.5))
+                modules_conv.append(nn.Dropout2d())
 
             nb_in_channels = nb_out_channels
             linear_in_size -= kernel_size - 1
@@ -43,13 +43,13 @@ class Net(nn.Module):
 
         modules_lin = []
 
-        for linear in linear_layer:
-            modules_lin.append(nn.Linear(linear_in_size, linear))
+        for nb_units in linear_layer:
+            modules_lin.append(nn.Linear(linear_in_size, nb_units))
             modules_lin.append(act_func)
-            linear_in_size = linear
+            linear_in_size = nb_units
 
             if with_batchnorm_lin:
-                modules_lin.append(nn.BatchNorm1d()) #TODO
+                modules_lin.append(nn.BatchNorm1d(nb_units))
 
             if with_dropout_lin:
                 modules_lin.append(nn.Dropout(p = 0.5))
@@ -59,6 +59,5 @@ class Net(nn.Module):
         self.seq_conv = nn.Sequential(*modules_conv)
         self.seq_lin  = nn.Sequential(*modules_lin)
 
-    #Defining the different operations on the data in the right order
     def forward(self, x):
         return self.seq_lin(self.seq_conv(x).view(-1,self.seq_lin[0].in_features))
