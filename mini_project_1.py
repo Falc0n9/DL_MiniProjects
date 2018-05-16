@@ -59,5 +59,6 @@ class Net(nn.Module):
         self.seq_conv = nn.Sequential(*modules_conv)
         self.seq_lin  = nn.Sequential(*modules_lin)
 
+    #Defining the different operations on the data in the right order
     def forward(self, x):
         return self.seq_lin(self.seq_conv(x).view(-1,self.seq_lin[0].in_features))
