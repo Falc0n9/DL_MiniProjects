@@ -7,30 +7,37 @@ from torchvision import datasets
 from dlc_practical_prologue import convert_to_one_hot_labels
 from helperfunctions import compute_nb_errors, cross_val_datasets
 
-
+#Defining structure of neural network in class Net()
 class Net(nn.Module):
     def __init__(self):
         super(Net,self).__init__()
 
+        #Defining kernel_size for each convolutional layer
         conv1_kernel_size = 2
         conv2_kernel_size = 2
 
+        #Defining kernel_size for pooling after each convolutional layer
         self.pool1_kernel_size = 1
         self.pool2_kernel_size = 1
 
+        #Defining the amount of measurements taken by the 28 EEG channels
         nb_measurements = 50
 
+        #Defining number of input and output channels for the convolutional layers
         conv1_nb_in_channels = 28
         conv1_nb_out_channels = 10
         conv2_nb_out_channels = 5
 
+        #Determining the input size of the first linear layer as a function of the previous operations
         self.linear1_in_size = conv2_nb_out_channels * floor((floor((nb_measurements-conv1_kernel_size+1)/self.pool1_kernel_size)-conv2_kernel_size+1)/self.pool2_kernel_size)
 
+        #Defening each convolutional and linear layer with its respective input and output sizes
         self.conv1 = nn.Conv1d(conv1_nb_in_channels,conv1_nb_out_channels,kernel_size=conv1_kernel_size)
         self.conv2 = nn.Conv1d(conv1_nb_out_channels,conv2_nb_out_channels,kernel_size=conv2_kernel_size)
         self.fc1 = nn.Linear(self.linear1_in_size,10) #does the linear layer correctly handle batches?
         self.fc2 = nn.Linear(10,2)
 
+    #Defining the different operations on the data in the right order
     def forward(self, x):
         x = F.tanh(F.max_pool1d(self.conv1(x), kernel_size = self.pool1_kernel_size))
         x = F.tanh(F.max_pool1d(self.conv2(x), kernel_size = self.pool2_kernel_size))
@@ -38,7 +45,7 @@ class Net(nn.Module):
         x = self.fc2(x)
         return x
 
-
+#Choosing the size of the validation datasets and the lambda value used for L1 penalization
 validate_size = 50
 lambda_1 = 0.0001
 
@@ -82,7 +89,7 @@ for i in range(train_input.size(0)):
             loss.backward()
             #Updating the parameters of the model
             optimizer.step()
-            #Implementing L1 penelization
+            #Implementing L1 penalization
             for p in model.parameters():
                 p.data -= p.data.sign() * p.data.abs().clamp(max = lambda_1)
             sum_loss = sum_loss + loss.data[0]
