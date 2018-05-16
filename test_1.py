@@ -57,40 +57,42 @@ validate_input, validate_target, train_target, train_input = Variable(validate_i
 test_target, test_input = Variable(test_target), Variable(test_input)
 
 # Training parameters
-lr, nb_epochs, batch_size = 0.1, 100, 10
+learning_rates, nb_epochs, batch_size = [1,0.1,0.001,0.0001], 100, 10
 lambda_L1 = lambda_L2 = 0.0001
+act_funcs = [ReLU(), Tanh()]
 
-for i in range(5):
-    conv_layer = []
-    linear_layer = []
-    nb_conv_layers = randint(1,4)
-    for j in range(nb_conv_layers):
-        kernel_size = randint(2,8)
-        nb_channels = randint(1,30)
-        conv_layer += [(kernel_size, nb_channels)] 
-    
-    nb_linear_layers = randint(1,4)
-    for j in range(nb_linear_layers):
-        hidden_units = randint(4,500)
-        linear_layer += [hidden_units]
-    # Cross-validation loop
-    for i in range(train_input.size(0)):
-        model = Net(conv_layer,linear_layer, with_dropout_conv=False, with_dropout_lin=True)
+for i in range(len(train_input)):
+    for sigma in act_funcs:
+        for lr in learning_rates:
+            conv_layer = []
+            linear_layer = []
+            for nb_conv_layers in range(1,4):
+                for ks in range(2,8):
+                    for nb_ch in range(1,30):
+                        conv_layer += [(ks, nb_ch)] 
+            
+            nb_linear_layers = randint(1,4)
+            for j in range(nb_linear_layers):
+                hidden_units = randint(4,500)
+                linear_layer += [hidden_units]
+            # Cross-validation loop
+            for i in range(train_input.size(0)):
+                model = Net(conv_layer,linear_layer, with_dropout_conv=False, with_dropout_lin=True)
 
 
-        # Model training
-        model.train(True)
-        train_model(model, train_input[i], train_target[i], optimizer=optim.Adadelta)
-        model.train(False)
+                # Model training
+                model.train(True)
+                train_model(model, train_input[i], train_target[i], optimizer=optim.Adadelta)
+                model.train(False)
 
-        # Report results
-        print(i, " Train Accuracy:",
-            100 * (1 - compute_nb_errors(model, train_input[i], train_target[i], batch_size) / len(train_input[i])))
-        print(i, " Validate Accuracy:", 100 * (
-                1 - compute_nb_errors(model, validate_input[i], validate_target[i], batch_size) / len(validate_input[i])))
-        #print(i, " Test Accuracy:", 100 * (
-        #        1 - compute_nb_errors(model, test_input, test_target, batch_size) / len(test_input)))
-        print("-------------------------------------------------------------")
+                # Report results
+                print(i, " Train Accuracy:",
+                    100 * (1 - compute_nb_errors(model, train_input[i], train_target[i], batch_size) / len(train_input[i])))
+                print(i, " Validate Accuracy:", 100 * (
+                        1 - compute_nb_errors(model, validate_input[i], validate_target[i], batch_size) / len(validate_input[i])))
+                #print(i, " Test Accuracy:", 100 * (
+                #        1 - compute_nb_errors(model, test_input, test_target, batch_size) / len(test_input)))
+                print("-------------------------------------------------------------")
 
 
 
