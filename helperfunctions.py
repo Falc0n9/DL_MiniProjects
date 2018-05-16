@@ -12,9 +12,9 @@ def compute_nb_errors(model, input, target, mini_batch_size):
 
     for b in range(0, input.size(0) - input.size(0)%mini_batch_size, mini_batch_size):
         output = model(input.narrow(0, b, mini_batch_size))
-        _, predicted_classes = output.max(1)
+        _, predicted_classes = output.data.max(1)
         for k in range(0, mini_batch_size):
-            if target[b + k] != predicted_classes[k]:
+            if target.data[b + k] != predicted_classes[k]:
                 nb_errors = nb_errors + 1
 
     return nb_errors
