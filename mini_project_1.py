@@ -34,7 +34,7 @@ class Net(nn.Module):
                 modules_conv.append(nn.BatchNorm1d()) #TODO
 
             if with_dropout_conv:
-                modules_conv.append(nn.Dropout2d()) #TODO
+                modules_conv.append(nn.Dropout2d(p = 0.5))
 
             nb_in_channels = nb_out_channels
             linear_in_size -= kernel_size - 1
@@ -52,7 +52,7 @@ class Net(nn.Module):
                 modules_lin.append(nn.BatchNorm1d()) #TODO
 
             if with_dropout_lin:
-                modules_lin.append(nn.Dropout()) #TODO
+                modules_lin.append(nn.Dropout(p = 0.5))
 
         modules_lin.append(nn.Linear(linear_in_size, 2))
 

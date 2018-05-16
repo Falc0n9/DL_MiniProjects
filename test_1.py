@@ -67,10 +67,13 @@ linear_layer = [10,20]
 
 # Cross-validation loop
 for i in range(train_input.size(0)):
-    model = Net(conv_layer,linear_layer)
+    model = Net(conv_layer,linear_layer, with_dropout_conv=False, with_dropout_lin=True)
+
 
     # Model training
+    model.train(True)
     train_model(model, train_input[i], train_target[i], optimizer=optim.Adadelta)
+    model.train(False)
 
     # Report results
     print(i, " Train Accuracy:",
