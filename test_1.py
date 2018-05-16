@@ -1,5 +1,8 @@
 from mini_project_1 import *
-
+from torch import optim
+import dlc_bci as bci
+from helperfunctions import *
+from torch.autograd import Variable
 
 def train_model(model,
                 train_input, train_target,
@@ -7,7 +10,6 @@ def train_model(model,
                 lr=0.1, nb_epochs=100, batch_size=10,
                 L1_penalty=False, L2_penalty=False,
                 lambda_L1=0.0001, lambda_L2=0.0001):
-
     criterion = criterion()
     optimizer = optimizer(model.parameters(), lr=lr)
 
@@ -54,15 +56,21 @@ validate_input, validate_target, train_target, train_input = Variable(validate_i
 test_target, test_input = Variable(test_target), Variable(test_input)
 
 # Training parameters
-lr, nb_epochs, batch_size = 1e-1, 100, 10
+lr, nb_epochs, batch_size = 0.1, 100, 10
 lambda_L1 = lambda_L2 = 0.0001
+
+
+
+
+conv_layer = [(2,10),(2,5)]
+linear_layer = [10,20]
 
 # Cross-validation loop
 for i in range(train_input.size(0)):
-    model = Net()
+    model = Net(conv_layer,linear_layer)
 
     # Model training
-    train_model(model,train_input[i], train_target[i])
+    train_model(model, train_input[i], train_target[i], optimizer=optim.Adadelta)
 
     # Report results
     print(i, " Train Accuracy:",
