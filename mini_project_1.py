@@ -5,15 +5,15 @@ class Net(nn.Module):
     def __init__(self, conv_layer, linear_layer, act_func=ReLU(),
                  with_batchnorm_conv=False, with_dropout_conv=False,
                  with_batchnorm_lin=False, with_dropout_lin=False):
-        """
 
-        :param conv_layer:
-        :param linear_layer:
-        :param act_func:
-        :param with_batchnorm_conv:
-        :param with_dropout_conv:
-        :param with_batchnorm_lin:
-        :param with_dropout_lin:
+        """
+        :param conv_layer: List of convolutional layers to implement with structure: (kernel_size, number of output channels)
+        :param linear_layer: List of linear layers to implement with structure: (number of hidden units)
+        :param act_func: Activation function used after each layer
+        :param with_batchnorm_conv: Batch normalization in the convolutional layers 
+        :param with_dropout_conv: Dropout implementation in the convolutional layers
+        :param with_batchnorm_lin: Batch normalization in the convolutional layers
+        :param with_dropout_lin: Dropout implementation in the linear layers
         """
 
         super().__init__()

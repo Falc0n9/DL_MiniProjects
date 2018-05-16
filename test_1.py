@@ -3,6 +3,7 @@ from torch import optim
 import dlc_bci as bci
 from helperfunctions import *
 from torch.autograd import Variable
+from random import randint
 
 def train_model(model,
                 train_input, train_target,
@@ -59,24 +60,38 @@ test_target, test_input = Variable(test_target), Variable(test_input)
 lr, nb_epochs, batch_size = 0.1, 100, 10
 lambda_L1 = lambda_L2 = 0.0001
 
-conv_layer = [(2,10),(2,5)]
-linear_layer = [10,20]
+for i in range(5):
+    conv_layer = []
+    linear_layer = []
+    nb_conv_layers = randint(1,4)
+    for j in range(nb_conv_layers):
+        kernel_size = randint(2,8)
+        nb_channels = randint(1,30)
+        conv_layer += [(kernel_size, nb_channels)] 
+    
+    nb_linear_layers = randint(1,4)
+    for j in range(nb_linear_layers):
+        hidden_units = randint(4,500)
+        linear_layer += [hidden_units]
+    # Cross-validation loop
+    for i in range(train_input.size(0)):
+        model = Net(conv_layer,linear_layer, with_dropout_conv=False, with_dropout_lin=True)
 
-# Cross-validation loop
-for i in range(train_input.size(0)):
-    model = Net(conv_layer,linear_layer, with_dropout_conv=False, with_dropout_lin=True)
+
+        # Model training
+        model.train(True)
+        train_model(model, train_input[i], train_target[i], optimizer=optim.Adadelta)
+        model.train(False)
+
+        # Report results
+        print(i, " Train Accuracy:",
+            100 * (1 - compute_nb_errors(model, train_input[i], train_target[i], batch_size) / len(train_input[i])))
+        print(i, " Validate Accuracy:", 100 * (
+                1 - compute_nb_errors(model, validate_input[i], validate_target[i], batch_size) / len(validate_input[i])))
+        #print(i, " Test Accuracy:", 100 * (
+        #        1 - compute_nb_errors(model, test_input, test_target, batch_size) / len(test_input)))
+        print("-------------------------------------------------------------")
 
 
-    # Model training
-    model.train(True)
-    train_model(model, train_input[i], train_target[i], optimizer=optim.Adadelta)
-    model.train(False)
 
-    # Report results
-    print(i, " Train Accuracy:",
-          100 * (1 - compute_nb_errors(model, train_input[i], train_target[i], batch_size) / len(train_input[i])))
-    print(i, " Validate Accuracy:", 100 * (
-            1 - compute_nb_errors(model, validate_input[i], validate_target[i], batch_size) / len(validate_input[i])))
-    print(i, " Test Accuracy:", 100 * (
-            1 - compute_nb_errors(model, validate_input[i], validate_target[i], batch_size) / len(validate_input[i])))
-    print("-------------------------------------------------------------")
+
