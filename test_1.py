@@ -60,7 +60,7 @@ validate_input, validate_target, train_target, train_input = Variable(validate_i
 test_target, test_input = Variable(test_target), Variable(test_input)
 
 # Training parameters
-lr, nb_epochs, batch_size = 0.01, 200, 30
+lr, nb_epochs, batch_size = 0.01, 50, 30
 lambda_L1 = lambda_L2 = 0.0001
 
 conv_layer = [(3, 40),(3,20)]
@@ -77,7 +77,7 @@ for i in range(train_input.size(0)):
 
     # Model training
     model.train(True)
-    train_model(model, train_input[i], train_target[i], criterion=nn.CrossEntropyLoss, optimizer=optim.SGD, lr=lr, L1_penalty= False, L2_penalty=False)
+    train_model(model, train_input[i], train_target[i], criterion=nn.CrossEntropyLoss, optimizer=optim.SGD, lr=lr, L1_penalty= False, L2_penalty=True)
     model.train(False)
     train_acc = 100 * (1 - compute_nb_errors(model, train_input[i], train_target[i], batch_size) / len(train_input[i]))
     val_acc = 100 * (1 - compute_nb_errors(model, validate_input[i], validate_target[i], batch_size) / len(validate_input[i]))
