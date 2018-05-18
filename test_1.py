@@ -11,14 +11,26 @@ def train_model(model,
                 lr=0.1, nb_epochs=100, batch_size=10,
                 L1_penalty=False, L2_penalty=False,
                 lambda_L1=0.0001, lambda_L2=0.0001):
+    """
+    :param model: The model to train
+    :param train_input: Training input
+    :param train_target: Training targets
+    :param criterion: The loss criterion
+    :param optimizer: The training optimizer
+    :param lr: The learning rate
+    :param nb_epochs: The number of epochs
+    :param batch_size: The batch-size
+    :param L1_penalty: Whether to apply L1 penalty
+    :param L2_penalty: Whether to apply L2 penalty
+    :param lambda_L1: Lambda for L1 penalty
+    :param lambda_L2: Lambda for L2 penalty
+    """
+
     criterion = criterion()
     optimizer = optimizer(model.parameters(), lr=lr)
 
     # Normalizing data
     mu, std = train_input.data.mean(), train_input.data.std()
-    #mu, std = train_input.data.mean(2).mean(0), train_input.data.std(2).std(0)
-    #mu, std = unsqueeze(unsqueeze(mu, 0),2), unsqueeze(unsqueeze(std, 0),2)
-
     train_input.data.sub_(mu).div_(std)
 
     for k in range(nb_epochs):
@@ -85,6 +97,7 @@ for i in range(train_input.size(0)):
     train_acc_avg += train_acc
     val_acc_avg += val_acc
     test_acc_avg += test_acc
+    
     # Report results
     print(i, " Train Accuracy:", train_acc)
     print(i, " Validate Accuracy:", val_acc)
