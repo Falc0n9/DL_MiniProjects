@@ -1,5 +1,5 @@
 from mini_project_1 import *
-from torch import optim, unsqueeze, div
+from torch import optim, unsqueeze, div, Tensor
 import dlc_bci as bci
 from helperfunctions import *
 from torch.autograd import Variable
@@ -15,10 +15,11 @@ def train_model(model,
     optimizer = optimizer(model.parameters(), lr=lr)
 
     # Normalizing data
-    mu, std = train_input.data.mean(2).mean(0), train_input.data.std(2).mean(0)
-    mu, std = unsqueeze(unsqueeze(mu, 0),2), unsqueeze(unsqueeze(std, 0),2)
+    mu, std = train_input.data.mean(), train_input.data.std()
+    #mu, std = train_input.data.mean(2).mean(0), train_input.data.std(2).std(0)
+    #mu, std = unsqueeze(unsqueeze(mu, 0),2), unsqueeze(unsqueeze(std, 0),2)
 
-    train_input.data = div((train_input.data-mu), std)
+    train_input.data.sub_(mu).div_(std)
 
     for k in range(nb_epochs):
         sum_loss = 0
@@ -59,30 +60,39 @@ validate_input, validate_target, train_target, train_input = Variable(validate_i
 test_target, test_input = Variable(test_target), Variable(test_input)
 
 # Training parameters
-lr, nb_epochs, batch_size = 0.1, 100, 10
+lr, nb_epochs, batch_size = 0.01, 200, 30
 lambda_L1 = lambda_L2 = 0.0001
 
-conv_layer = [(2, 10), (2,5)]
-linear_layer = [(10)]
+conv_layer = [(3, 40),(3,20)]
+linear_layer = [20]
 
 # Cross-validation loop
+train_acc_avg = 0
+val_acc_avg = 0
+test_acc_avg = 0
+
 for i in range(train_input.size(0)):
-    model = Net(conv_layer,linear_layer, with_dropout_conv=False, with_dropout_lin=False)
+    model = Net(conv_layer,linear_layer, act_func=ReLU, with_dropout_conv=False, with_batchnorm_conv=False, with_dropout_lin=False, with_batchnorm_lin=False)
 
 
     # Model training
     model.train(True)
-    train_model(model, train_input[i], train_target[i], optimizer=optim.SGD, lr=lr, L1_penalty= True)
+    train_model(model, train_input[i], train_target[i], criterion=nn.CrossEntropyLoss, optimizer=optim.SGD, lr=lr, L1_penalty= False, L2_penalty=False)
     model.train(False)
-
+    train_acc = 100 * (1 - compute_nb_errors(model, train_input[i], train_target[i], batch_size) / len(train_input[i]))
+    val_acc = 100 * (1 - compute_nb_errors(model, validate_input[i], validate_target[i], batch_size) / len(validate_input[i]))
+    test_acc = 100*(1 - compute_nb_errors(model, test_input, test_target, batch_size) / len(test_input))
+    train_acc_avg += train_acc
+    val_acc_avg += val_acc
+    test_acc_avg += test_acc
     # Report results
-    print(i, " Train Accuracy:",
-        100 * (1 - compute_nb_errors(model, train_input[i], train_target[i], batch_size) / len(train_input[i])))
-    print(i, " Validate Accuracy:", 100 * (
-            1 - compute_nb_errors(model, validate_input[i], validate_target[i], batch_size) / len(validate_input[i])))
-    #print(i, " Test Accuracy:", 100 * (
-    #        1 - compute_nb_errors(model, test_input, test_target, batch_size) / len(test_input)))
+    print(i, " Train Accuracy:", train_acc)
+    print(i, " Validate Accuracy:", val_acc)
+    print(i, " Test Accuracy:", test_acc)
     print("-------------------------------------------------------------")
 
+print("Avg. Train acc.:", train_acc_avg/train_input.size(0))
+print("Avg. Validate acc.:", val_acc_avg/train_input.size(0))
+print("Avg. Test acc.:", test_acc_avg/train_input.size(0))
 
 
