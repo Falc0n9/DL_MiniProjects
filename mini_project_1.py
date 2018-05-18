@@ -1,8 +1,8 @@
 from torch import nn
-from torch.nn import ReLU
+from torch.nn import ReLU, Tanh
 
 class Net(nn.Module):
-    def __init__(self, conv_layer, linear_layer, act_func=ReLU(),
+    def __init__(self, conv_layer, linear_layer, act_func=ReLU,
                  with_batchnorm_conv=False, with_dropout_conv=False,
                  with_batchnorm_lin=False, with_dropout_lin=False):
 
@@ -28,7 +28,7 @@ class Net(nn.Module):
             kernel_size = conv[0]
             nb_out_channels = conv[1]
             modules_conv.append(nn.Conv1d(nb_in_channels, nb_out_channels, kernel_size=kernel_size))
-            modules_conv.append(act_func)
+            modules_conv.append(act_func())
 
             if with_batchnorm_conv:
                 modules_conv.append(nn.BatchNorm1d(nb_out_channels))
@@ -45,7 +45,7 @@ class Net(nn.Module):
 
         for nb_units in linear_layer:
             modules_lin.append(nn.Linear(linear_in_size, nb_units))
-            modules_lin.append(act_func)
+            modules_lin.append(act_func())
             linear_in_size = nb_units
 
             if with_batchnorm_lin:

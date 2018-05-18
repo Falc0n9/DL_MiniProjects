@@ -2,8 +2,7 @@ from torch import Tensor
 from mini_project_2 import *
 from math import pi
 import matplotlib.pyplot as plt
-from plot import plot_data
-from helperfunctions import convert_to_one_hot_labels, compute_nb_errors
+from helperfunctions import plot_data,convert_to_one_hot_labels, compute_nb_errors
 
 train_data = Tensor(10000, 2).uniform_()
 train_target = (train_data.pow(2).sum(1) < 1 / (2 * pi)).long()
